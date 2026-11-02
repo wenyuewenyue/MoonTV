@@ -10,6 +10,18 @@ export async function GET(request: Request) {
   if (!imageUrl) {
     return NextResponse.json({ error: 'Missing image URL' }, { status: 400 });
   }
+  let targetUrl: URL;
+  try {
+    targetUrl = new URL(imageUrl);
+  } catch {
+    return NextResponse.json({ error: 'Invalid image URL' }, { status: 400 });
+  }
+  if (targetUrl.protocol !== 'http:' && targetUrl.protocol !== 'https:') {
+    return NextResponse.json({ error: 'Image URL is not allowed' }, { status: 400 });
+  }
+  if (targetUrl.hostname !== 'doubanio.com' && !targetUrl.hostname.endsWith('.doubanio.com')) {
+    return NextResponse.json({ error: 'Image URL is not allowed' }, { status: 400 });
+  }
 
   try {
     const imageResponse = await fetch(imageUrl, {
@@ -28,6 +40,9 @@ export async function GET(request: Request) {
     }
 
     const contentType = imageResponse.headers.get('content-type');
+    if (!contentType || !contentType.startsWith('image/')) {
+      return NextResponse.json({ error: 'Invalid image content type' }, { status: 400 });
+    }
 
     if (!imageResponse.body) {
       return NextResponse.json(
