@@ -33,13 +33,18 @@ export function getImageProxyUrl(): string | null {
  */
 export function processImageUrl(originalUrl: string): string {
   if (!originalUrl) return originalUrl;
-
   const proxyUrl = getImageProxyUrl();
-  if (!proxyUrl) return originalUrl;
-
-  return `${proxyUrl}${encodeURIComponent(originalUrl)}`;
+  if (proxyUrl) return `${proxyUrl}${encodeURIComponent(originalUrl)}`;
+  try {
+    const hostname = new URL(originalUrl).hostname.toLowerCase();
+    if (hostname === 'doubanio.com' || hostname.endsWith('.doubanio.com')) {
+      return `/api/image-proxy?url=${encodeURIComponent(originalUrl)}`;
+    }
+  } catch {
+    // keep original URL on parse failure
+  }
+  return originalUrl;
 }
-
 /**
  * 获取豆瓣代理 URL 设置
  */
